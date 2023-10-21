@@ -16,7 +16,7 @@ app.use(express.json())
 // mongo db setup!!!
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.e9onx31.mongodb.net/?retryWrites=true&w=majority`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -35,11 +35,40 @@ async function run() {
 
     const brandCollection = client.db("BrandDB").collection("brand")
     const productCollection = client.db('ProductDB').collection("Product")
+    const cartCollection = client.db('CartDB').collection('Cart')
+    const productSlider = client.db('productSlider').collection('slider')
 
+    // get product slider 
+    app.get ('/productSlider', async (req, res) =>{
+      const cursor = productSlider.find()
+      const result = await cursor.toArray()
+      res.send(result)
+    })
+
+
+    app.get('/products', async (req, res) => {
+      const cursor = productCollection.find()
+      const result = await cursor.toArray()
+      res.send(result)
+    })
 
     app.get('/brands', async (req, res) => {
       const cursor = brandCollection.find()
       const result = await cursor.toArray()
+      res.send(result)
+    })
+
+    app.get('/update/:id', async (req, res) => {
+      const id = req.params.id 
+      const query = {_id: new ObjectId(id)}
+      const result = await productCollection.findOne(query)
+      res.send(result)
+    })
+
+    app.get('/details/:id', async (req, res) => {
+      const id = req.params.id
+      const query = {_id: new ObjectId(id)}
+      const result = await productCollection.findOne(query)
       res.send(result)
     })
 
@@ -53,11 +82,49 @@ async function run() {
     })
 
 
+    app.get('/cart', async (req, res) => {
+      
+      const result = cartCollection.find()
+      const data = await result.toArray()
+      res.send(data) 
+    })
+
+
 
 
     app.post('/products', async (req, res) => {
       const product = req.body
       const result = await productCollection.insertOne(product)
+      res.send(result)
+    })
+
+
+    app.post('/cart', async (req, res) => {
+      const product = req.body
+      const result = await cartCollection.insertOne(product)
+      res.send(result)
+    })
+
+
+
+    app.put('/products/:id', async (req, res) => {
+      const id = req.params.id
+      const product = req.body;
+      const filter = {_id: new ObjectId(id)}
+      const options = {upsert: true}
+      const newProduct = {
+        $set: {
+          brand: product.brand,
+          description: product.description,
+          name: product.name ,
+          photo: product.photo ,
+          price: product.price,
+          rating: product.rating,
+          type: product.type
+        }
+      }
+     
+      const result = await productCollection.updateOne(filter, newProduct, options)
       res.send(result)
     })
 
