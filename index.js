@@ -37,6 +37,7 @@ async function run() {
     const productCollection = client.db('ProductDB').collection("Product")
     const cartCollection = client.db('CartDB').collection('Cart')
     const productSlider = client.db('productSlider').collection('slider')
+    
 
     // get product slider 
     app.get ('/productSlider', async (req, res) =>{
@@ -91,6 +92,24 @@ async function run() {
 
 
 
+     // get blogs 
+     const blogCollection = client.db('BlogDB').collection('blog')
+     app.get('/blog', async (req, res) => {
+       const result = blogCollection.find()
+       const blogs = await result.toArray()
+       res.send(blogs)
+     })
+
+
+     app.get('/blog/:id', async (req, res) => {
+      const id = req.params.id
+      const query = {_id: new ObjectId(id)}
+      const result = await blogCollection.findOne(query)
+      res.send(result)
+     })
+
+
+
 
     app.post('/products', async (req, res) => {
       const product = req.body
@@ -138,6 +157,7 @@ async function run() {
 
 
 
+   
 
 
     // Send a ping to confirm a successful connection
